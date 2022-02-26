@@ -6,106 +6,139 @@
  * @flow strict-local
  */
 
-import React from 'react';
-import type {Node} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
   SafeAreaView,
-  ScrollView,
+  TextInput,
   StatusBar,
   StyleSheet,
-  Text,
-  useColorScheme,
+  FlatList,
+  Image,
   View,
+  Dimensions,
 } from 'react-native';
+import SearchForm from './src/components/searchbox';
+import useApi from './src/useApi';
+import useDebounce from './src/useDebounce';
+import useSearchForm from './src/useSearch';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const App = () => {
+  const [term, updateTerm] = useState('');
+  const [page, setPage] = useState(1);
 
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+  const API_KEY = 'zgc9jybhOj86SU914CSSn6wHacdDpJNJ';
+  const apiEndpoint = term ? 'search' : 'trending';
+  const debouncedQuery = useDebounce(term, 500);
+  // const debouncedQuery = useDebounce(term, 500);
 
-const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const {query, handleInputChange, handleSubmit} = useSearchForm();
+  const [firstRun, setFirstRun] = useState(true);
+  const isFirstRun = useRef(true);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const apiUrl = offset =>
+    `https://api.giphy.com/v1/gifs/${apiEndpoint}?api_key=${API_KEY}&limit=20&rating=g&q=${term}`;
+
+  const [{data, loading, error, lastPage}, fetchImages] = useApi();
+
+  const ITEM_WIDTH = Dimensions.get('window').width;
+  // const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+
+  // const fetchGifs = async () => {
+  //   try {
+  //     const BASE_URL = 'https://api.giphy.com/v1/gifs/trending';
+  //     const searchURL = `${BASE_URL}?limit=20&api_key=${API_KEY}`;
+  //     console.log(searchURL);
+  //     const resJson = await fetch(searchURL);
+  //     const res = await resJson.json();
+  //     console.log('RESPONSE =' + res);
+
+  //     setGifs(res.data);
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+  // function onEdit(newTerm) {
+  //   updateTerm(newTerm);
+  //   fetchGifs();
+  // }
+  const onSearch = () => {
+    console.log('onSearch');
   };
 
+  useEffect(() => {
+    fetchImages(apiUrl(0));
+    // onSearch(query);
+
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      setFirstRun(false);
+    }
+  }, [debouncedQuery]);
+
+  const renderItem = ({item}) => {
+    const url = item.images.fixed_height.url;
+    return (
+      <View style={styles.itemContainer}>
+        <Image resizeMode="contain" style={styles.image} source={{uri: url}} />
+      </View>
+    );
+  };
+  const loadMoreGifs = () => {
+    setPage(page + 1);
+    fetchImages(apiUrl(page * 20), true);
+  };
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+    <SafeAreaView style={{flex: 1}}>
+      <View style={styles.container}>
+        {/* <SearchForm
+          value={term}
+          setValue={handleInputChange}
+          onSubmit={handleSubmit}
+          placeholder="Search Gifs"
+        /> */}
+        {/* <TextInput
+          placeholder="Search Giphy"
+          placeholderTextColor="#fff"
+          style={styles.textInput}
+          onChangeText={text => onEdit(text)}
+        /> */}
+
+        <FlatList
+          keyExtractor={(item, index) => index}
+          onEndReached={loadMoreGifs}
+          onEndReachedThreshold={0.1}
+          keyboardShouldPersistTaps={'handled'}
+          numColumns={2}
+          data={data}
+          renderItem={renderItem}
+        />
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    width: '100%',
+    padding: 5,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+
+  textInput: {
+    width: '100%',
+    height: 50,
+    color: 'white',
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  image: {
+    height: 150,
+    width: 150,
   },
-  highlight: {
-    fontWeight: '700',
+  itemContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 150,
+    margin: 5,
   },
 });
 
