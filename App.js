@@ -1,34 +1,27 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
+
 
 import React, {useEffect, useState, useRef} from 'react';
 import {
   SafeAreaView,
-  TextInput,
   Text,
   StyleSheet,
   FlatList,
   Image,
   View,
   TouchableOpacity,
-  Dimensions,
 } from 'react-native';
 import SearchForm from './src/components/searchbox';
-import useApi from './src/useApi';
-import useDebounce from './src/useDebounce';
-import useSearchForm from './src/useSearch';
-
-const ITEM_WIDTH = Dimensions.get('window').width / 2 - 10;
+import useApi from './src/hooks/useApi';
+import useDebounce from './src/hooks/useDebounce';
+import useSearchForm from './src/hooks/useSearch';
+import ApiConstant from './src/const/api_const';
+import StringConst from './src/const/string_const';
+import RenderGifItem from './src/components/gif_list_item';
+import Loading from './src/components/loading_screen';
+import AppHeader from './src/components/app_header';
 
 const App = () => {
-  // const [term, updateTerm] = useState('');
   const [page, setPage] = useState(1);
-  const API_KEY = 'zgc9jybhOj86SU914CSSn6wHacdDpJNJ';
   const {query, handleInputChange, handleSubmit} = useSearchForm();
   const debouncedQuery = useDebounce(query, 500);
   const [firstRun, setFirstRun] = useState(true);
@@ -36,53 +29,36 @@ const App = () => {
   const flatlistRef = useRef(null);
   const [contentVerticalOffset, setContentVerticalOffset] = useState(0);
   const CONTENT_OFFSET_THRESHOLD = 300;
-  const apiEndpoint = query ? 'search' : 'trending';
+  const apiEndpoint = query ? ApiConstant.SEARCH : ApiConstant.TRENDING;
 
-  const apiUrl = offset =>
-    `https://api.giphy.com/v1/gifs/${apiEndpoint}?api_key=${API_KEY}&limit=20&rating=g&q=${query}`;
+  const apiUrl = () =>
+    `${ApiConstant.BASE_URL}/${apiEndpoint}?api_key=${ApiConstant.API_KEY}&limit=20&rating=g&q=${query}`;
   const [{data, loading, error, lastPage}, fetchImages] = useApi();
-  const onSearch = () => {
-  };
 
   useEffect(() => {
     fetchImages(apiUrl(0));
-    onSearch(query);
-
     if (isFirstRun.current) {
       isFirstRun.current = false;
       setFirstRun(false);
     }
   }, [debouncedQuery]);
-
-  const renderItem = ({item}) => {
-    const url = item.images.fixed_height.url;
-    return (
-      <View style={styles.itemContainer}>
-        <Image resizeMode="cover" style={styles.image} source={{uri: url}} />
-      </View>
-    );
-  };
   const loadMoreGifs = () => {
     setPage(page + 1);
     fetchImages(apiUrl(page * 20), true);
   };
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: '#151618'}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: '#121212'}}>
       <View style={styles.container}>
-
-        <View style= {{ backgroundColor:'blacl', height:50,padding:5, width:"100%", flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
-          <Text style={{color:'white', fontSize:22, fontWeight:'bold'}}>Giphy </Text>
-          <View style={{height:40, width:40, backgroundColor:'grey', borderRadius:40, justifyContent:'center', alignItems:'center'}}>
-          <Text style={{color:'white', fontSize:14, fontWeight:'bold'}}>RY</Text>
-          </View>
-
-        </View>
+    
+    <AppHeader/>
         <SearchForm
           value={query}
           setValue={handleInputChange}
           onSubmit={handleSubmit}
           placeholder="Search Gifs"
         />
+
+        {loading && <Loading></Loading>}
         <FlatList
           ref={flatlistRef}
           keyExtractor={(item, index) => index}
@@ -94,7 +70,7 @@ const App = () => {
           onScroll={event => {
             setContentVerticalOffset(event.nativeEvent.contentOffset.y);
           }}
-          renderItem={renderItem}
+          renderItem={RenderGifItem}
         />
         {contentVerticalOffset > CONTENT_OFFSET_THRESHOLD && (
           <TouchableOpacity
@@ -116,7 +92,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    backgroundColor: '#151618',
+    backgroundColor: '#121212',
   },
 
   textInput: {
@@ -124,11 +100,7 @@ const styles = StyleSheet.create({
     height: 50,
     color: 'white',
   },
-  image: {
-    height: 150,
-    width: ITEM_WIDTH,
-    borderRadius: 10,
-  },
+
   scrollTopButton: {
     height: 50,
     width: 50,
@@ -136,15 +108,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
   },
-  itemContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: 150,
-    margin: 5,
-    backgroundCard: '#25282c',
-    padding: 20,
-    borderRadius: 10,
-  },
+ 
 });
 export default App;

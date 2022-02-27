@@ -1,5 +1,5 @@
 import {useReducer} from 'react';
-import dataFetchReducer from './datafetchReducer';
+import dataFetchReducer from '../reducer/datafetchReducer';
 
 const useApi = () => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
