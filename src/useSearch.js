@@ -1,7 +1,7 @@
 import {useState} from 'react';
-
 const useSearchForm = () => {
   const [query, setInputs] = useState('');
+
 
   const handleSubmit = e => {
     console.log('handleSubmit');
@@ -9,10 +9,9 @@ const useSearchForm = () => {
       e.preventDefault();
     }
   };
-  const handleInputChange = e => {
-    console.log('handleInputChange');
-    e.persist();
-    setInputs(e.target.value);
+  const handleInputChange = (e) => {
+    console.log('handleInputChange'+e);
+    setInputs(e);
   };
 
   return {

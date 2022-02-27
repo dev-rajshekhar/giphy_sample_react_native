@@ -9,6 +9,7 @@ const SearchForm = ({onSubmit, placeholder, setValue, value}) => {
         height: 50,
         color: 'black',
         padding: 5,
+        backgroundColor: 'white',
         borderWidth: 2,
       }}
       placeholder={placeholder}
