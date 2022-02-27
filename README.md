@@ -13,8 +13,7 @@
 * [React-Hooks](https://reactjs.org/docs/hooks-intro.html)
 
 ## Screent Shots
-![screenshot](./screenshot/screenshot1.png)
-![screenshot](./screenshot/sc2.png)
+<p align="center" width="100%"><img src="./screenshot/screenshot1.png" width =320><img src="./screenshot/sc2.png" width =320></p>
 
 ## Connect Me
 * [Twitter](https://twitter.com/yrajshekhar231)
